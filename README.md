@@ -27,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Then open the printed local URL (usually http://localhost:5173).
+Then open the printed local URL.
 
 ## Build for production
 
