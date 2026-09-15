@@ -20,27 +20,3 @@ React + Vite + Tailwind CSS.
   on large inputs (up to thousands of elements/nodes), with charts
 - Complexity panels (best/average/worst/space) for every algorithm
 
-## Getting started
-
-```bash
-npm install
-npm run dev
-```
-
-Then open the printed local URL.
-
-## Build for production
-
-```bash
-npm run build
-npm run preview
-```
-
-## Project structure
-
-```
-src/
-  App.jsx       # main visualizer component (all pages/logic)
-  main.jsx      # React entry point
-  index.css     # Tailwind directives
-```
