@@ -54,9 +54,10 @@ npm run build    # production build into dist/
 │   ├── pages/                     # GraphPage, SortingPage, ComparisonPage
 │   ├── utils/format.js            # number formatting helpers
 │   ├── App.jsx                    # tab navigation
+│   ├── index.html                 # HTML shell
 │   └── main.jsx                   # entry point
-├── index.html
-└── vite.config.js / tailwind.config.js / postcss.config.js
+├── package.json
+└── vite.config.js                 # Vite + Tailwind + PostCSS config (single file)
 ```
 
 ## Deployment
