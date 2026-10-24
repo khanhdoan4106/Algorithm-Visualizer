@@ -20,3 +20,24 @@ React + Vite + Tailwind CSS.
   on large inputs (up to thousands of elements/nodes), with charts
 - Complexity panels (best/average/worst/space) for every algorithm
 
+## Getting started
+
+Requires [Node.js](https://nodejs.org) 18 or newer.
+
+```bash
+npm install      # first time only
+npm run dev      # open http://localhost:5173
+npm run build    # production build into dist/
+```
+
+## Project structure
+
+```
+src/
+  algorithms/   graph.js (BFS, DFS, Dijkstra, A*), sorting.js, arrays.js, benchmark.js
+  components/   Controls (play/pause/step), ComplexityPanel
+  data/         complexity tables, demo graph + random graph generator
+  hooks/        usePlayer (step-by-step playback)
+  pages/        GraphPage, SortingPage, ComparisonPage
+```
+
