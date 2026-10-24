@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "description": "Interactive visualizer for graph search and sorting algorithms",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/khanhdoan4106/Algorithm-Visualizer.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

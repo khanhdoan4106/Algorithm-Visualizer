@@ -1,25 +1,4 @@
-// Fast, non-visual BFS/DFS on large random graphs (adjacency lists of integer ids).
-
-export function randomLargeGraph(n, avgDegree) {
-  const adj = Array.from({ length: n }, () => []);
-  // Random spanning tree first, so the graph is connected.
-  for (let i = 1; i < n; i++) {
-    const j = Math.floor(Math.random() * i);
-    adj[i].push(j);
-    adj[j].push(i);
-  }
-  const extra = Math.max(0, Math.floor((n * avgDegree) / 2) - (n - 1));
-  for (let k = 0; k < extra; k++) {
-    const u = Math.floor(Math.random() * n);
-    const v = Math.floor(Math.random() * n);
-    if (u !== v) {
-      adj[u].push(v);
-      adj[v].push(u);
-    }
-  }
-  const edgeCount = adj.reduce((s, l) => s + l.length, 0) / 2;
-  return { adj, edgeCount };
-}
+// Fast, non-visual BFS/DFS on large graphs (adjacency lists of integer ids).
 
 export function bfsStats(adj, start = 0) {
   const t0 = performance.now();

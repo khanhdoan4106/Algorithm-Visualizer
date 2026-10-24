@@ -3,9 +3,11 @@ import { Move, Plus, Link, Eraser, Shuffle, RotateCcw, Trash2 } from "lucide-rea
 import Controls from "../components/Controls.jsx";
 import ComplexityPanel from "../components/ComplexityPanel.jsx";
 import usePlayer from "../hooks/usePlayer.js";
-import { buildGraph, fmt, GRAPH_ALGORITHMS } from "../algorithms/graph.js";
+import { buildGraph, GRAPH_ALGORITHMS } from "../algorithms/graphSearch.js";
 import { GRAPH_COMPLEXITY } from "../data/complexity.js";
-import { CANVAS, DEMO_GRAPH, nextLabel, randomGraph } from "../data/demoGraph.js";
+import { CANVAS, DEMO_GRAPH } from "../data/demoGraph.js";
+import { nextLabel, randomGraph } from "../generators/graphGenerator.js";
+import { fmt } from "../utils/format.js";
 
 const { width: W, height: H, radius: R, maxNodes } = CANVAS;
 

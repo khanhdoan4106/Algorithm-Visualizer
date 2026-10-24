@@ -1,5 +1,7 @@
 // Graph search algorithms. Each one returns a list of snapshot steps for the visualizer.
 
+import { fmt } from "../utils/format.js";
+
 export function buildGraph(nodes, edges, { directed, weighted }) {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const adj = new Map(nodes.map((n) => [n.id, []]));
@@ -32,8 +34,6 @@ export function buildGraph(nodes, edges, { directed, weighted }) {
 
   return { adj, label, h };
 }
-
-export const fmt = (x) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 
 function makeRecorder() {
   const steps = [];

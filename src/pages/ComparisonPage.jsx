@@ -13,9 +13,11 @@ import {
   YAxis,
 } from "recharts";
 import { countSort, SORT_ALGORITHMS } from "../algorithms/sorting.js";
-import { ARRAY_CASES, generateArray } from "../algorithms/arrays.js";
-import { bfsStats, dfsStats, randomLargeGraph } from "../algorithms/benchmark.js";
+import { bfsStats, dfsStats } from "../algorithms/benchmark.js";
 import { SORT_COMPLEXITY } from "../data/complexity.js";
+import { ARRAY_CASES, generateArray } from "../generators/arrayGenerator.js";
+import { randomLargeGraph } from "../generators/graphGenerator.js";
+import { compact, full, ms } from "../utils/format.js";
 
 const SORT_COLORS = {
   "Bubble Sort": "#ef4444",
@@ -26,9 +28,6 @@ const SORT_COLORS = {
 };
 const GRAPH_COLORS = { BFS: "#0ea5e9", DFS: "#f97316" };
 
-const compact = (v) => new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(v);
-const full = (v) => new Intl.NumberFormat("en").format(v);
-const ms = (v) => `${v.toFixed(2)} ms`;
 const clamp = (v, lo, hi, dflt) => Math.max(lo, Math.min(hi, Math.round(Number(v) || dflt)));
 
 // Lets React paint the "running" state before a blocking benchmark starts.

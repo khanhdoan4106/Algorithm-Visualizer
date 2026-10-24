@@ -1,5 +1,19 @@
+# Dependencies & build output
 node_modules
 dist
 dist-ssr
+
+# Local env files
 *.local
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
+Thumbs.db

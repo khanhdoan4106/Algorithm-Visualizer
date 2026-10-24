@@ -4,7 +4,7 @@ import Controls from "../components/Controls.jsx";
 import ComplexityPanel from "../components/ComplexityPanel.jsx";
 import usePlayer from "../hooks/usePlayer.js";
 import { recordSort, SORT_ALGORITHMS } from "../algorithms/sorting.js";
-import { ARRAY_CASES, generateArray, parseArray } from "../algorithms/arrays.js";
+import { ARRAY_CASES, generateArray, parseArray } from "../generators/arrayGenerator.js";
 import { SORT_COMPLEXITY } from "../data/complexity.js";
 
 const MAX_SIZE = 60;

@@ -4,6 +4,8 @@ An interactive visualizer for graph search algorithms (BFS, DFS, Dijkstra, A*)
 and sorting algorithms (Bubble, Selection, Merge, Quick, Heap), built with
 React + Vite + Tailwind CSS.
 
+**Live demo:** https://khanhdoan4106.github.io/Algorithm-Visualizer/
+
 ## Features
 
 - Step-by-step visualization (Previous / Play / Pause / Next / Reset + speed
@@ -33,11 +35,32 @@ npm run build    # production build into dist/
 ## Project structure
 
 ```
-src/
-  algorithms/   graph.js (BFS, DFS, Dijkstra, A*), sorting.js, arrays.js, benchmark.js
-  components/   Controls (play/pause/step), ComplexityPanel
-  data/         complexity tables, demo graph + random graph generator
-  hooks/        usePlayer (step-by-step playback)
-  pages/        GraphPage, SortingPage, ComparisonPage
+.
+├── .github/workflows/deploy.yml   # build & deploy to GitHub Pages on every push to main
+├── public/                        # static files copied as-is (favicon)
+├── src/
+│   ├── algorithms/
+│   │   ├── graphSearch.js         # BFS, DFS, Dijkstra, A* (step-by-step snapshots)
+│   │   ├── sorting.js             # Bubble, Selection, Merge, Quick, Heap
+│   │   └── benchmark.js           # fast BFS/DFS statistics for large graphs
+│   ├── generators/
+│   │   ├── arrayGenerator.js      # random / sorted / reversed / ... input arrays
+│   │   └── graphGenerator.js      # random small graphs and large benchmark graphs
+│   ├── data/
+│   │   ├── complexity.js          # best / average / worst / space tables
+│   │   └── demoGraph.js           # canvas size and the default demo graph
+│   ├── components/                # Controls (play / pause / step), ComplexityPanel
+│   ├── hooks/usePlayer.js         # playback state shared by all visualizers
+│   ├── pages/                     # GraphPage, SortingPage, ComparisonPage
+│   ├── utils/format.js            # number formatting helpers
+│   ├── App.jsx                    # tab navigation
+│   └── main.jsx                   # entry point
+├── index.html
+└── vite.config.js / tailwind.config.js / postcss.config.js
 ```
+
+## Deployment
+
+Every push to `main` builds the app and publishes it to GitHub Pages via
+GitHub Actions. One-time setup: **Settings → Pages → Source: GitHub Actions**.
 
