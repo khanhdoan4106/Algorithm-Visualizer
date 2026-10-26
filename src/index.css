@@ -3,29 +3,72 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-100 text-slate-800 antialiased;
+  @apply bg-paper font-sans text-ink antialiased;
+  font-feature-settings: "tnum" 1; /* step counters and tables line up */
 }
 
-.card {
-  @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm;
+:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-ink;
+}
+
+@layer components {
+/* A panel is a section separated by a rule, not a floating card. */
+.panel {
+  @apply border-t border-rule pt-4;
+}
+.panel-title {
+  @apply mb-3 text-[15px] font-semibold;
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40;
+  @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-rule bg-paper px-3 text-sm font-medium transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-rule;
 }
-
 .btn-primary {
-  @apply border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700;
+  @apply border-ink bg-ink text-paper hover:bg-ink/90;
 }
 
-.btn-active {
-  @apply border-indigo-500 bg-indigo-50 text-indigo-700;
+/* Segmented choice (algorithm picker, builder tools) */
+.seg {
+  @apply inline-flex flex-wrap gap-1 rounded-lg bg-sheet p-1;
+}
+.seg button {
+  @apply h-8 rounded-md px-3 text-sm font-medium text-muted transition-colors hover:text-ink;
+}
+.seg button[aria-pressed="true"] {
+  @apply bg-paper text-ink shadow-[0_1px_2px_rgba(27,29,34,0.16)];
 }
 
 .input {
-  @apply rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500;
+  @apply h-9 rounded-md border border-rule bg-paper px-2.5 text-sm hover:border-graphite focus:border-ink focus:outline-none;
 }
 
 .label {
-  @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+  @apply mb-1 block text-[13px] font-medium text-muted;
+}
+
+/* Big-O and other notation set like a textbook */
+.math {
+  @apply font-math italic;
+}
+}
+
+/* Graph-paper background for the drawing areas */
+.graph-paper {
+  background-color: #f7f9fc;
+  background-image:
+    linear-gradient(#dde6f0 1px, transparent 1px),
+    linear-gradient(90deg, #dde6f0 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+input[type="range"] {
+  accent-color: #1b1d22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

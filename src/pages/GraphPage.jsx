@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import { Move, Plus, Link, Eraser, Shuffle, RotateCcw, Trash2 } from "lucide-react";
 import Controls from "../components/Controls.jsx";
 import ComplexityPanel from "../components/ComplexityPanel.jsx";
+import FrontierStrip from "../components/FrontierStrip.jsx";
+import { INK, GRAPHITE, HIGHLIGHT, REDPEN, MUTED } from "../data/theme.js";
 import usePlayer from "../hooks/usePlayer.js";
 import { buildGraph, GRAPH_ALGORITHMS } from "../algorithms/graphSearch.js";
 import { GRAPH_COMPLEXITY } from "../data/complexity.js";
@@ -11,34 +13,38 @@ import { fmt } from "../utils/format.js";
 
 const { width: W, height: H, radius: R, maxNodes } = CANVAS;
 
+// Vertex colours follow CLRS: white = undiscovered, gray = discovered (in the frontier),
+// black = finished. Yellow highlighter marks the node being processed, red pen the answer.
 const NODE_COLORS = {
-  idle: { fill: "#ffffff", stroke: "#94a3b8", text: "#334155" },
-  pending: { fill: "#e0e7ff", stroke: "#6366f1", text: "#312e81" },
-  frontier: { fill: "#fed7aa", stroke: "#f97316", text: "#7c2d12" },
-  visited: { fill: "#bfdbfe", stroke: "#3b82f6", text: "#1e3a8a" },
-  current: { fill: "#fde047", stroke: "#ca8a04", text: "#713f12" },
-  path: { fill: "#86efac", stroke: "#16a34a", text: "#14532d" },
+  idle: { fill: "#ffffff", stroke: INK, text: INK },
+  pending: { fill: HIGHLIGHT, stroke: INK, text: INK },
+  frontier: { fill: GRAPHITE, stroke: INK, text: INK },
+  visited: { fill: INK, stroke: INK, text: "#ffffff" },
+  current: { fill: HIGHLIGHT, stroke: INK, text: INK },
+  path: { fill: REDPEN, stroke: REDPEN, text: "#ffffff" },
 };
 
 const EDGE_COLORS = {
-  idle: "#cbd5e1",
-  tree: "#60a5fa",
-  selected: "#6366f1",
-  active: "#f59e0b",
-  path: "#16a34a",
+  idle: "#c3c8cf",
+  tree: INK,
+  selected: INK,
+  active: INK,
+  path: REDPEN,
 };
+const EDGE_WIDTH = { idle: 2, tree: 2.5, selected: 3, active: 3.5, path: 4.5 };
 
 const MODES = [
-  { id: "move", label: "Move / Select", icon: Move, hint: "Drag nodes to move them. Click an edge to edit its weight." },
+  { id: "move", label: "Move", icon: Move, hint: "Drag nodes to move them. Click an edge to change its weight." },
   { id: "addNode", label: "Add node", icon: Plus, hint: `Click on empty space to add a node (max ${maxNodes}).` },
   { id: "addEdge", label: "Add edge", icon: Link, hint: "Click a node, then another node to connect them." },
   { id: "delete", label: "Delete", icon: Eraser, hint: "Click a node or an edge to delete it." },
 ];
 
 const LEGEND = [
-  ["current", "Current"],
+  ["idle", "Undiscovered"],
   ["frontier", "In frontier"],
-  ["visited", "Visited"],
+  ["current", "Being processed"],
+  ["visited", "Finished"],
   ["path", "Final path"],
 ];
 
@@ -51,7 +57,7 @@ const EMPTY_STEP = {
   path: [],
   pathEdges: [],
   dist: null,
-  message: "The graph is empty — add some nodes to start.",
+  message: "The graph is empty. Choose Add node and click the paper to start.",
 };
 
 const clampWeight = (v) => Math.max(0, Math.min(99, Math.round(Number(v) || 0)));
@@ -191,22 +197,25 @@ export default function GraphPage() {
   const L = graph.label;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-4">
-        <div className="card">
-          <div className="mb-3 flex flex-wrap gap-2">
-            {Object.entries(GRAPH_ALGORITHMS).map(([key, { name }]) => (
-              <button key={key} className={`btn ${algo === key ? "btn-active" : ""}`} onClick={() => setAlgo(key)}>
-                {name}
-              </button>
-            ))}
-          </div>
+    <div className="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="min-w-0 space-y-5">
+        <div className="seg" role="group" aria-label="Algorithm">
+          {Object.entries(GRAPH_ALGORITHMS).map(([key, { name }]) => (
+            <button key={key} aria-pressed={algo === key} onClick={() => setAlgo(key)}>
+              {name}
+            </button>
+          ))}
+        </div>
+
+        <div>
           <svg
             ref={svgRef}
             viewBox={`0 0 ${W} ${H}`}
-            className="w-full touch-none select-none rounded-lg border border-slate-200 bg-slate-50"
+            className="graph-paper w-full touch-none select-none rounded-md border border-rule"
             onPointerMove={onPointerMove}
             onPointerUp={() => (dragId.current = null)}
+            role="img"
+            aria-label={`Graph with ${nodes.length} nodes and ${edges.length} edges`}
           >
             <defs>
               {Object.entries(EDGE_COLORS).map(([k, c]) => (
@@ -262,10 +271,14 @@ export default function GraphPage() {
                   className={mode === "move" || mode === "delete" ? "cursor-pointer" : ""}
                 >
                   <line {...line} stroke="transparent" strokeWidth={14} />
+                  {kind === "active" && (
+                    <line {...line} stroke={HIGHLIGHT} strokeWidth={12} strokeLinecap="round" />
+                  )}
                   <line
                     {...line}
                     stroke={EDGE_COLORS[kind]}
-                    strokeWidth={kind === "idle" ? 2 : kind === "tree" ? 3 : 4}
+                    strokeWidth={EDGE_WIDTH[kind]}
+                    strokeDasharray={kind === "selected" ? "6 4" : undefined}
                     markerEnd={directed ? `url(#arrow-${kind})` : undefined}
                   />
                   {weighted && (
@@ -275,11 +288,18 @@ export default function GraphPage() {
                         y={my - 10}
                         width={22}
                         height={19}
-                        rx={4}
+                        rx={3}
                         fill="#ffffff"
-                        stroke={EDGE_COLORS[kind]}
+                        stroke={kind === "idle" ? "#c3c8cf" : EDGE_COLORS[kind]}
                       />
-                      <text x={mx} y={my + 4} textAnchor="middle" fontSize="12" fontWeight="600" fill="#334155">
+                      <text
+                        x={mx}
+                        y={my + 4}
+                        textAnchor="middle"
+                        fontSize="12"
+                        fontWeight="600"
+                        fill={kind === "path" ? REDPEN : INK}
+                      >
                         {e.weight}
                       </text>
                     </g>
@@ -291,39 +311,55 @@ export default function GraphPage() {
             {nodes.map((n) => {
               const c = NODE_COLORS[nodeState(n.id)];
               const d = step.dist ? step.dist[n.id] : undefined;
+              const tag = n.id === start ? "start" : n.id === target ? "target" : null;
               return (
                 <g
                   key={n.id}
                   onPointerDown={(ev) => onNodePointerDown(ev, n.id)}
                   className={mode === "move" ? "cursor-grab" : "cursor-pointer"}
                 >
-                  {(n.id === start || n.id === target) && (
+                  {tag && (
                     <circle
                       cx={n.x}
                       cy={n.y}
                       r={R + 5}
                       fill="none"
-                      stroke={n.id === start ? "#16a34a" : "#dc2626"}
-                      strokeWidth={2}
-                      strokeDasharray="4 3"
+                      stroke={tag === "start" ? INK : REDPEN}
+                      strokeWidth={1.5}
+                      strokeDasharray="3 3"
                     />
                   )}
-                  <circle cx={n.x} cy={n.y} r={R} fill={c.fill} stroke={c.stroke} strokeWidth={3} />
+                  <circle cx={n.x} cy={n.y} r={R} fill={c.fill} stroke={c.stroke} strokeWidth={2.5} />
                   <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize="15" fontWeight="700" fill={c.text}>
                     {n.label}
                   </text>
-                  {n.id === start && (
-                    <text x={n.x} y={n.y - R - 9} textAnchor="middle" fontSize="10" fontWeight="700" fill="#16a34a">
-                      START
-                    </text>
-                  )}
-                  {n.id === target && n.id !== start && (
-                    <text x={n.x} y={n.y - R - 9} textAnchor="middle" fontSize="10" fontWeight="700" fill="#dc2626">
-                      TARGET
+                  {tag && (
+                    <text
+                      x={n.x}
+                      y={n.y - R - 10}
+                      textAnchor="middle"
+                      fontSize="12"
+                      fontWeight="600"
+                      fill={tag === "start" ? INK : REDPEN}
+                      stroke="#ffffff"
+                      strokeWidth={4}
+                      paintOrder="stroke"
+                    >
+                      {tag}
                     </text>
                   )}
                   {step.dist && (
-                    <text x={n.x} y={n.y + R + 15} textAnchor="middle" fontSize="12" fontWeight="600" fill="#475569">
+                    <text
+                      x={n.x}
+                      y={n.y + R + 16}
+                      textAnchor="middle"
+                      fontSize="12.5"
+                      fontWeight="600"
+                      fill={MUTED}
+                      stroke="#ffffff"
+                      strokeWidth={4}
+                      paintOrder="stroke"
+                    >
                       {d === undefined ? "∞" : fmt(d)}
                     </text>
                   )}
@@ -331,42 +367,37 @@ export default function GraphPage() {
               );
             })}
           </svg>
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-600">
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-muted">
             {LEGEND.map(([k, label]) => (
-              <span key={k} className="flex items-center gap-1.5">
+              <li key={k} className="flex items-center gap-1.5">
                 <span
                   className="inline-block h-3.5 w-3.5 rounded-full border-2"
                   style={{ background: NODE_COLORS[k].fill, borderColor: NODE_COLORS[k].stroke }}
                 />
                 {label}
-              </span>
+              </li>
             ))}
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-1 w-5 rounded" style={{ background: EDGE_COLORS.tree }} />
-              Search tree
-            </span>
-          </div>
+            {step.dist && <li>Numbers under nodes: current distance</li>}
+          </ul>
         </div>
 
-        <div className="card">
-          <div className="text-xs font-semibold uppercase text-slate-500">Step explanation</div>
-          <p className="mt-1 min-h-[24px] font-medium text-slate-800">{step.message}</p>
-          {step.frontier.length > 0 && (
-            <p className="mt-2 text-sm text-slate-600">
-              <span className="font-semibold">{algoInfo.frontier}:</span> [{step.frontier.map(L).join(", ")}]
-            </p>
+        <section className="space-y-4" aria-live="polite">
+          <p className="text-lg font-medium leading-snug sm:text-xl">{step.message}</p>
+          {start != null && (
+            <FrontierStrip algo={algo} frontier={step.frontier} label={L} dist={step.dist} fmt={fmt} />
           )}
-          <p className="mt-1 text-sm text-slate-600">
-            <span className="font-semibold">Visited ({step.visited.length}):</span> {step.visited.map(L).join(", ") || "—"}
+          <p className="text-sm text-muted">
+            <span className="font-semibold text-ink">Finished ({step.visited.length}):</span>{" "}
+            {step.visited.map(L).join(", ") || "none yet"}
           </p>
-        </div>
+        </section>
       </div>
 
-      <div className="space-y-4">
-        <div className="card space-y-3">
+      <aside className="space-y-6">
+        <section className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Start</label>
+            <label>
+              <span className="label">Start</span>
               <select className="input w-full" value={start ?? ""} onChange={(e) => setStartId(Number(e.target.value))}>
                 {nodes.map((n) => (
                   <option key={n.id} value={n.id}>
@@ -374,44 +405,52 @@ export default function GraphPage() {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className="label">Target</label>
+            </label>
+            <label>
+              <span className="label">Target</span>
               <select
                 className="input w-full"
                 value={target ?? ""}
                 onChange={(e) => setTargetId(e.target.value === "" ? null : Number(e.target.value))}
               >
-                <option value="">None (full traversal)</option>
+                <option value="">None, visit all</option>
                 {nodes.map((n) => (
                   <option key={n.id} value={n.id}>
                     {n.label}
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
           </div>
           <Controls player={player} />
-        </div>
+        </section>
 
         <ComplexityPanel title={algoInfo.name} info={GRAPH_COMPLEXITY[algo]} />
 
-        <div className="card space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700">
-            Graph builder <span className="font-normal text-slate-500">({nodes.length}/{maxNodes} nodes)</span>
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
+        <section className="panel space-y-3">
+          <div className="flex items-baseline justify-between">
+            <h2 className="panel-title mb-0">Edit graph</h2>
+            <span className="text-[13px] text-muted">
+              {nodes.length} of {maxNodes} nodes
+            </span>
+          </div>
+          <div className="seg grid w-full grid-cols-2" role="group" aria-label="Editing tool">
             {MODES.map(({ id, label, icon: Icon }) => (
-              <button key={id} className={`btn ${mode === id ? "btn-active" : ""}`} onClick={() => changeMode(id)}>
-                <Icon size={15} /> {label}
+              <button
+                key={id}
+                aria-pressed={mode === id}
+                onClick={() => changeMode(id)}
+                className="inline-flex flex-1 items-center justify-center gap-1"
+              >
+                <Icon size={14} /> {label}
               </button>
             ))}
           </div>
-          <p className="text-xs text-slate-500">{MODES.find((m) => m.id === mode).hint}</p>
+          <p className="text-[13px] leading-relaxed text-muted">{MODES.find((m) => m.id === mode).hint}</p>
 
           {mode === "addEdge" && (
-            <div className="flex items-center gap-2 text-sm">
-              <label className="text-slate-600">Weight of new edges</label>
+            <label className="flex items-center gap-2 text-sm">
+              <span className="text-muted">Weight of new edges</span>
               <input
                 type="number"
                 min={0}
@@ -420,14 +459,14 @@ export default function GraphPage() {
                 value={newWeight}
                 onChange={(e) => setNewWeight(e.target.value)}
               />
-            </div>
+            </label>
           )}
 
           {editingEdge && (
-            <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 text-sm">
-              <span className="text-indigo-800">
+            <div className="flex items-center gap-2 rounded-md bg-sheet p-2 text-sm">
+              <span>
                 Edge {L(editingEdge.from)}
-                {directed ? " → " : " — "}
+                {directed ? " → " : " – "}
                 {L(editingEdge.to)}, weight
               </span>
               <input
@@ -436,6 +475,7 @@ export default function GraphPage() {
                 max={99}
                 className="input w-16"
                 value={editingEdge.weight}
+                aria-label="Edge weight"
                 onChange={(e) =>
                   setEdges((es) =>
                     es.map((x) => (x.id === editingEdge.id ? { ...x, weight: clampWeight(e.target.value) } : x))
@@ -443,8 +483,9 @@ export default function GraphPage() {
                 }
               />
               <button
-                className="btn px-2"
+                className="btn ml-auto w-9 px-0"
                 title="Delete edge"
+                aria-label="Delete edge"
                 onClick={() => {
                   setEdges((es) => es.filter((x) => x.id !== editingEdge.id));
                   setSelectedEdge(null);
@@ -455,42 +496,48 @@ export default function GraphPage() {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex flex-wrap gap-5 text-sm">
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={directed} onChange={(e) => setDirected(e.target.checked)} />
+              <input type="checkbox" className="accent-ink" checked={directed} onChange={(e) => setDirected(e.target.checked)} />
               Directed
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={weighted} onChange={(e) => setWeighted(e.target.checked)} />
+              <input type="checkbox" className="accent-ink" checked={weighted} onChange={(e) => setWeighted(e.target.checked)} />
               Weighted
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-            <input
-              type="number"
-              min={2}
-              max={maxNodes}
-              className="input w-16"
-              value={randomCount}
-              onChange={(e) => setRandomCount(e.target.value)}
-              title="Number of nodes"
-            />
-            <button
-              className="btn"
-              onClick={() => loadGraph(randomGraph(Math.max(2, Math.min(maxNodes, Number(randomCount) || 8))))}
-            >
-              <Shuffle size={15} /> Random
-            </button>
-            <button className="btn" onClick={() => loadGraph(DEMO_GRAPH)}>
-              <RotateCcw size={15} /> Demo
-            </button>
-            <button className="btn" onClick={() => loadGraph({ nodes: [], edges: [] })}>
-              <Trash2 size={15} /> Clear
-            </button>
+          <div className="space-y-2 border-t border-rule pt-3">
+            <div className="flex items-center gap-2">
+              <button
+                className="btn flex-1"
+                onClick={() => loadGraph(randomGraph(Math.max(2, Math.min(maxNodes, Number(randomCount) || 8))))}
+              >
+                <Shuffle size={15} /> Random graph
+              </button>
+              <label className="flex items-center gap-1.5 text-[13px] text-muted">
+                <input
+                  type="number"
+                  min={2}
+                  max={maxNodes}
+                  className="input w-14"
+                  value={randomCount}
+                  onChange={(e) => setRandomCount(e.target.value)}
+                />
+                nodes
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <button className="btn flex-1" onClick={() => loadGraph(DEMO_GRAPH)}>
+                <RotateCcw size={15} /> Demo graph
+              </button>
+              <button className="btn flex-1" onClick={() => loadGraph({ nodes: [], edges: [] })}>
+                <Trash2 size={15} /> Clear all
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </aside>
     </div>
   );
 }

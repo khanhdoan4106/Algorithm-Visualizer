@@ -6,23 +6,27 @@ import usePlayer from "../hooks/usePlayer.js";
 import { recordSort, SORT_ALGORITHMS } from "../algorithms/sorting.js";
 import { ARRAY_CASES, generateArray, parseArray } from "../generators/arrayGenerator.js";
 import { SORT_COMPLEXITY } from "../data/complexity.js";
+import { INK, GRAPHITE, HIGHLIGHT, REDPEN } from "../data/theme.js";
 
 const MAX_SIZE = 60;
 
-const BAR_COLORS = {
-  idle: "#93c5fd",
-  compare: "#facc15",
-  swap: "#f87171",
-  write: "#f87171",
-  pivot: "#a78bfa",
-  sorted: "#4ade80",
+// Same logic as the graph page: gray = not yet placed, black = finished,
+// yellow highlighter = being compared, red pen = being moved.
+const BAR_STYLES = {
+  idle: { background: GRAPHITE },
+  compare: { background: HIGHLIGHT, boxShadow: `inset 0 0 0 2px ${INK}` },
+  swap: { background: REDPEN },
+  write: { background: REDPEN },
+  pivot: { background: "#ffffff", boxShadow: `inset 0 0 0 2px ${INK}` },
+  sorted: { background: INK },
 };
 
 const LEGEND = [
+  ["idle", "Unsorted"],
   ["compare", "Comparing"],
-  ["swap", "Swap / write"],
+  ["swap", "Swap or write"],
   ["pivot", "Pivot"],
-  ["sorted", "Sorted"],
+  ["sorted", "In final place"],
 ];
 
 export default function SortingPage() {
@@ -58,74 +62,73 @@ export default function SortingPage() {
     setArray(parsed);
   };
 
-  const barColor = (i) => {
-    if (highlighted.has(i) && BAR_COLORS[step.type]) return BAR_COLORS[step.type];
-    if (sorted.has(i)) return BAR_COLORS.sorted;
-    return BAR_COLORS.idle;
+  const barStyle = (i) => {
+    if (highlighted.has(i) && BAR_STYLES[step.type]) return BAR_STYLES[step.type];
+    if (sorted.has(i)) return BAR_STYLES.sorted;
+    return BAR_STYLES.idle;
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-4">
-        <div className="card">
-          <div className="mb-3 flex flex-wrap gap-2">
-            {Object.entries(SORT_ALGORITHMS).map(([key, { name }]) => (
-              <button key={key} className={`btn ${algo === key ? "btn-active" : ""}`} onClick={() => setAlgo(key)}>
-                {name}
-              </button>
-            ))}
-          </div>
-          <div className="flex h-80 items-end gap-[2px] rounded-lg border border-slate-200 bg-slate-50 px-2 pt-6">
+    <div className="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="min-w-0 space-y-5">
+        <div className="seg" role="group" aria-label="Algorithm">
+          {Object.entries(SORT_ALGORITHMS).map(([key, { name }]) => (
+            <button key={key} aria-pressed={algo === key} onClick={() => setAlgo(key)}>
+              {name.replace(" Sort", "")}
+            </button>
+          ))}
+        </div>
+
+        <div>
+          <div
+            className="graph-paper flex h-72 items-end gap-[2px] rounded-md border border-rule px-2 pt-6 sm:h-80"
+            role="img"
+            aria-label={`Array of ${step.array.length} values`}
+          >
             {step.array.map((v, i) => (
               <div key={i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
-                {showValues && <span className="mb-0.5 text-[10px] font-semibold text-slate-600">{v}</span>}
+                {showValues && <span className="mb-0.5 text-[11px] font-semibold text-ink/80">{v}</span>}
                 <div
-                  className="w-full rounded-t transition-[height] duration-100"
-                  style={{ height: `${(v / maxValue) * 88}%`, background: barColor(i) }}
+                  className="w-full rounded-t-sm transition-[height] duration-100"
+                  style={{ height: `${(v / maxValue) * 88}%`, ...barStyle(i) }}
                 />
               </div>
             ))}
           </div>
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-600">
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-muted">
             {LEGEND.map(([k, label]) => (
-              <span key={k} className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-sm" style={{ background: BAR_COLORS[k] }} />
+              <li key={k} className="flex items-center gap-1.5">
+                <span className="inline-block h-3.5 w-3.5 rounded-sm" style={BAR_STYLES[k]} />
                 {label}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
-        <div className="card">
-          <div className="text-xs font-semibold uppercase text-slate-500">Step explanation</div>
-          <p className="mt-1 min-h-[24px] font-medium text-slate-800">{step.message}</p>
-          <div className="mt-2 flex gap-6 text-sm text-slate-600">
-            <span>
-              Comparisons: <b className="text-slate-800">{step.comparisons}</b>
-            </span>
-            <span>
-              Swaps / writes: <b className="text-slate-800">{step.swaps}</b>
-            </span>
-          </div>
-        </div>
+        <section className="space-y-2" aria-live="polite">
+          <p className="text-lg font-medium leading-snug sm:text-xl">{step.message}</p>
+          <p className="text-sm text-muted">
+            <span className="font-semibold text-ink">{step.comparisons}</span> comparisons and{" "}
+            <span className="font-semibold text-ink">{step.swaps}</span> swaps or writes so far
+          </p>
+        </section>
       </div>
 
-      <div className="space-y-4">
-        <div className="card">
-          <Controls player={player} />
-        </div>
+      <aside className="space-y-6">
+        <Controls player={player} />
 
         <ComplexityPanel title={SORT_ALGORITHMS[algo].name} info={SORT_COMPLEXITY[algo]} />
 
-        <div className="card space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700">Input array</h3>
-          <div>
-            <label className="label">
-              Size: {size}
-            </label>
+        <section className="panel space-y-4">
+          <h2 className="panel-title mb-0">Input array</h2>
+          <label className="block">
+            <span className="label flex justify-between">
+              <span>Size</span>
+              <span className="text-ink">{size} values</span>
+            </span>
             <input
               type="range"
-              className="w-full accent-indigo-600"
+              className="w-full"
               min={5}
               max={MAX_SIZE}
               value={size}
@@ -135,9 +138,9 @@ export default function SortingPage() {
                 regenerate(n, kind);
               }}
             />
-          </div>
-          <div>
-            <label className="label">Case</label>
+          </label>
+          <label className="block">
+            <span className="label">Starting order</span>
             <select
               className="input w-full"
               value={kind}
@@ -152,28 +155,37 @@ export default function SortingPage() {
                 </option>
               ))}
             </select>
-          </div>
+          </label>
           <button className="btn w-full" onClick={() => regenerate()}>
-            <Shuffle size={15} /> Generate new array
+            <Shuffle size={15} /> New array
           </button>
-          <div className="border-t border-slate-100 pt-3">
-            <label className="label">Manual input</label>
+          <div className="border-t border-rule pt-4">
+            <label className="label" htmlFor="manual-array">
+              Or type your own values
+            </label>
             <div className="flex gap-2">
               <input
+                id="manual-array"
                 className="input min-w-0 flex-1"
-                placeholder="e.g. 5, 3, 8, 1, 9, 2"
+                placeholder="5, 3, 8, 1, 9, 2"
                 value={manual}
                 onChange={(e) => setManual(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && applyManual()}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "manual-error" : undefined}
               />
               <button className="btn" onClick={applyManual}>
-                <Check size={15} /> Use
+                <Check size={15} /> Use these
               </button>
             </div>
-            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+            {error && (
+              <p id="manual-error" className="mt-1.5 text-[13px] text-redpen">
+                {error}
+              </p>
+            )}
           </div>
-        </div>
-      </div>
+        </section>
+      </aside>
     </div>
   );
 }

@@ -21,7 +21,28 @@ export default defineConfig({
       plugins: [
         tailwindcss({
           content: ["./src/**/*.{html,js,jsx}"],
-          theme: { extend: {} },
+          theme: {
+            extend: {
+              // Palette taken from algorithm textbooks: ink on white graph paper,
+              // CLRS vertex colours (white / gray / black), a highlighter for the
+              // current step and a red pen for the final answer.
+              colors: {
+                paper: "#ffffff",
+                ink: "#1b1d22",
+                graphite: "#b8bec6",
+                muted: "#5c636d",
+                rule: "#e3e6ea",
+                grid: "#dde6f0",
+                sheet: "#f7f9fc",
+                highlight: "#ffd84d",
+                redpen: "#c8312b",
+              },
+              fontFamily: {
+                sans: ['"IBM Plex Sans"', "system-ui", "sans-serif"],
+                math: ['"Source Serif 4"', "Georgia", "serif"],
+              },
+            },
+          },
           plugins: [],
         }),
         autoprefixer(),
