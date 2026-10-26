@@ -2,7 +2,8 @@
 
 An interactive visualizer for graph search algorithms (BFS, DFS, Dijkstra, A*)
 and sorting algorithms (Bubble, Selection, Merge, Quick, Heap), built with
-React + Vite + Tailwind CSS.
+React + Vite + Tailwind CSS. Fonts (IBM Plex Sans, Source Serif 4) are
+self-hosted through Fontsource.
 
 **Live demo:** https://khanhdoan4106.github.io/Algorithm-Visualizer/
 
@@ -21,6 +22,9 @@ React + Vite + Tailwind CSS.
 - Algorithm Comparison page: benchmark all sorting algorithms and BFS vs DFS
   on large inputs (up to thousands of elements/nodes), with charts
 - Complexity panels (best/average/worst/space) for every algorithm
+- Textbook-style colours: white / gray / black vertices as in CLRS, a
+  highlighter for the current step and red for the final path; the search
+  frontier is drawn as a real queue, stack or priority queue
 
 ## Getting started
 
@@ -48,8 +52,9 @@ npm run build    # production build into dist/
 │   │   └── graphGenerator.js      # random small graphs and large benchmark graphs
 │   ├── data/
 │   │   ├── complexity.js          # best / average / worst / space tables
-│   │   └── demoGraph.js           # canvas size and the default demo graph
-│   ├── components/                # Controls (play / pause / step), ComplexityPanel
+│   │   ├── demoGraph.js           # canvas size and the default demo graph
+│   │   └── theme.js               # colours used inside SVG and charts
+│   ├── components/                # Controls, ComplexityPanel, FrontierStrip (queue / stack view)
 │   ├── hooks/usePlayer.js         # playback state shared by all visualizers
 │   ├── pages/                     # GraphPage, SortingPage, ComparisonPage
 │   ├── utils/format.js            # number formatting helpers
